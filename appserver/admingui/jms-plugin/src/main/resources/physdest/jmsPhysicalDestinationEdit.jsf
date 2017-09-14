@@ -48,26 +48,28 @@
 <!composition template="/templates/default.layout"  guiTitle="$resource{i18njms.jmsPhysDestinations.editPageTitle}" >
 <!define name="content">
     <event>
-    <!beforeCreate
-        setPageSessionAttribute(key="pageTitle" value="$resource{i18njms.jmsPhysDestinations.editPageTitle}");
-        setPageSessionAttribute(key="pageTitleHelp" value="$resource{i18njms.jmsPhysDestinations.editPageHelp}");
-        setPageSessionAttribute(key="parentPage" value="#{param.parentPage}");
-        setPageSessionAttribute(key="target" value="#{param.target}");
-        setPageSessionAttribute(key="edit" value="#{true}");
-        getRequestValue(key="name" value=>$page{destName});
-        getRequestValue(key="type" value=>$page{destType});
-        setPageSessionAttribute(key="selfPage" value="#{request.contextPath}/jms/physdest/jmsPhysicalDestinationEdit.jsf?name=#{pageSession.destName}&type=#{pageSession.destType}&target=#{pageSession.target}&parentPage=#{pageSession.parentPage}")
-
-        if ("#{targetType} = instance") {
-            setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/servers/server/#{pageSession.target}");
-        }
-        if ("#{targetType} = cluster") {
-            setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/clusters/cluster/#{pageSession.target}");
-        }
-
-        gf.restRequest(endpoint="#{pageSession.baseUrl}/__get-jmsdest?id=#{pageSession.destName}&destType=#{pageSession.destType}", method="get", result="#{requestScope.restResponse}");
-        setPageSessionAttribute(key="valueMap", value="#{requestScope.restResponse.data.extraProperties.entity}");
-    />
+        <!beforeCreate
+            setPageSessionAttribute(key="pageTitle" value="$resource{i18njms.jmsPhysDestinations.editPageTitle}");
+            setPageSessionAttribute(key="pageTitleHelp" value="$resource{i18njms.jmsPhysDestinations.editPageHelp}");
+            setPageSessionAttribute(key="parentPage" value="#{param.parentPage}");
+            setPageSessionAttribute(key="target" value="#{param.target}");
+            setPageSessionAttribute(key="edit" value="#{true}");
+            getRequestValue(key="name", value="#{pageSession.destName}");
+            getRequestValue(key="type" value="#{pageSession.destType}");
+            if ("#{targetType} = instance") {
+                setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/servers/server/#{pageSession.target}");
+            }
+            if ("#{targetType} = cluster") {
+                setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/clusters/cluster/#{pageSession.target}");
+            }
+            gf.getEntityAttrs(
+                    endpoint="#{pageSession.baseUrl}/__get-jmsdest?id=#{pageSession.destName}&destType=#{pageSession.destType}"
+                    valueMap="#{pageSession.valueMap}"
+                );
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "localDeliveryPreferredSelected"});
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "useDmqSelected"});
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "validateXMLSchemaSelected"});
+        />
     </event>
     <sun:form id="jmsPhysDestForm">
 #include "/common/shared/alertMsg.inc"

@@ -50,19 +50,22 @@
 <!composition template="/templates/default.layout"  guiTitle="$resource{i18njms.jmsPhysDestinations.newPageTitle}" >
 <!define name="content">
     <event>
-    <!beforeCreate
-        setPageSessionAttribute(key="pageTitle" value="$resource{i18njms.jmsPhysDestinations.newPageTitle}");
-        setPageSessionAttribute(key="pageTitleHelp" value="$resource{i18njms.jmsPhysDestinations.newPageHelp}");
-        getRequestValue(key="parentPage" value="#{pageSession.parentPage}");
-        getRequestValue(key="target" value="#{pageSession.target}");
-        getDefaultPhysicalDestinationValues(map="#{pageSession.valueMap}");
-        if ("#{targetType} = instance") {
-            setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/servers/server/#{pageSession.target}");
-        }
-        if ("#{targetType} = cluster") {
-            setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/clusters/cluster/#{pageSession.target}");
-        }
-    />
+        <!beforeCreate
+            setPageSessionAttribute(key="pageTitle" value="$resource{i18njms.jmsPhysDestinations.newPageTitle}");
+            setPageSessionAttribute(key="pageTitleHelp" value="$resource{i18njms.jmsPhysDestinations.newPageHelp}");
+            getRequestValue(key="parentPage" value="#{pageSession.parentPage}");
+            getRequestValue(key="target" value="#{pageSession.target}");
+            getDefaultPhysicalDestinationValues(map="#{pageSession.valueMap}");
+            if ("#{targetType} = instance") {
+                setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/servers/server/#{pageSession.target}");
+            }
+            if ("#{targetType} = cluster") {
+                setPageSessionAttribute(key="baseUrl", value="#{sessionScope.REST_URL}/clusters/cluster/#{pageSession.target}");
+            }
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "useDmqSelected"});
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "validateXMLSchemaSelected"});
+            setPageSessionAttribute(key="convertToFalseList" value={"enabled", "localDeliveryPreferredSelected"});
+        />
     </event>
 #include "/common/shared/alertMsg.inc"
     <sun:form id="jmsPhysDestForm">
