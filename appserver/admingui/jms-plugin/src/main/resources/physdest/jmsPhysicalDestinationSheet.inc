@@ -141,7 +141,7 @@
             <sun:dropDown id="useDmq" values={"true", "false"} labels={"$resource{i18n.common.true}", "$resource{i18n.common.false}"} selected="#{pageSession.valueMap['UseDMQ']}" selectedValue="true"/>
         </sun:property>
         <sun:property id="validateSchemaProp" labelAlign="left" noWrap="#{true}" overlapLabel="#{false}" label="$resource{i18njms.jmsPhysDestinations.ValidateXMLSchemaEnabled}" helpText="$resource{i18njms.jmsPhysDestinations.ValidateXMLSchemaEnabledHelp}" >
-            <sun:dropDown id="validateXMLSchemaEnabled" values={"true", "false"} labels={"$resource{i18n.common.true}", "$resource{i18n.common.false}"} selected="#{pageSession.valueMap['ValidateXMLSchemaEnabled']}" selectedValue="true"/>
+            <sun:dropDown id="validateXMLSchemaEnabled" values={"false", "true"} labels={"$resource{i18n.common.false}", "$resource{i18n.common.true}"} selected="#{pageSession.valueMap['ValidateXMLSchemaEnabled']}" selectedValue="true"/>
         </sun:property>
         <sun:property id="xmlSchemeUrlProp" labelAlign="left" noWrap="#{true}" overlapLabel="#{false}" label="$resource{i18njms.jmsPhysDestinations.XMLSchemaURIList}" helpText="$resource{i18njms.jmsPhysDestinations.XMLSchemaURIListHelp}" >
             <sun:textField id="xmlSchemaURIList" text="#{pageSession.valueMap['XmlSchemaURIList']}" columns="$int{55}" maxLength="#{sessionScope.fieldLengths['maxLength.jmsPhysDestinations.XMLSchemaURIList']}" />

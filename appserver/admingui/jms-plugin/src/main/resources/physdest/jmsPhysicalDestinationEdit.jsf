@@ -67,6 +67,13 @@
 
         gf.restRequest(endpoint="#{pageSession.baseUrl}/__get-jmsdest?id=#{pageSession.destName}&destType=#{pageSession.destType}", method="get", result="#{requestScope.restResponse}");
         setPageSessionAttribute(key="valueMap", value="#{requestScope.restResponse.data.extraProperties.entity}");
+        
+        setPageSessionAttribute(key="useDmq", value="#{pageSession.valueMap['UseDMQ']}");
+        setPageSessionAttribute(key="localDeliveryPreferred", value="#{pageSession.valueMap['LocalDeliveryPreferred']}");
+        
+        if (#{pageSession.valueMap['ValidateXMLSchemaEnabled']} = true) {
+            setPageSessionAttribute(key="validateXMLSchemaEnabled", value="true");
+        }
     />
     </event>
     <sun:form id="jmsPhysDestForm">
