@@ -72,15 +72,12 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ResourceBundle;
 import org.apache.catalina.deploy.FilterMap;
+import org.apache.catalina.util.URLPattern;
 // END SJSAS 6374691
 
 /**
@@ -361,35 +358,23 @@ final class StandardHostValve
                     if (!file2.exists()) {
                         boolean fileExists = false;
                         String errorPagePath = errorPage.getLocation();
-                        for (String servletMapping : ((StandardHost) getContainer())
-                                .findDeployedApp(context.getPath()).findServletMappings()) {
-                            if (servletMapping != null
-                                    && !servletMapping.isEmpty()
-                                    && servletMapping.startsWith("*.")
-                                    && servletMapping.length() > 2) {
-                                if (errorPagePath.contains(".") && servletMapping.substring(1)
-                                        .equals(errorPagePath.substring(errorPagePath.lastIndexOf(".")))) {
+                        for (String servletMapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath()).findServletMappings()) {
+                            URLPattern mappingPattern = new URLPattern(servletMapping);
+                            URLPattern errorPagePattern = new URLPattern(errorPagePath);
+                            if (mappingPattern.implies(errorPagePattern)) {
                                 fileExists = true;
-                                }
-                            } else if (servletMapping.startsWith("/") || servletMapping.equals(errorPagePath)) {
-                                fileExists = true;
+                                break;
                             }
                         }
                         if (!fileExists) {
-                            for (FilterMap mapping : ((StandardHost) getContainer())
-                                    .findDeployedApp(context.getPath()).findFilterMaps()) {
+                            for (FilterMap mapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath()).findFilterMaps()) {
                                 if (mapping.getDispatcherTypes().contains(DispatcherType.ERROR)) {
                                     String filterMapPath = mapping.getURLPattern();
-                                    if (filterMapPath != null
-                                            && !filterMapPath.isEmpty() 
-                                            && filterMapPath.startsWith("*.")
-                                            && filterMapPath.length() > 2) {
-                                        if (errorPagePath.contains(".") && filterMapPath.substring(1)
-                                                .equals(errorPagePath.substring(errorPagePath.lastIndexOf(".")))) {
-                                            fileExists = true;
-                                        }
-                                    } else if (filterMapPath.startsWith("/") || filterMapPath.equals(errorPagePath)) {
+                                    URLPattern mappingPattern = new URLPattern(filterMapPath);
+                                    URLPattern errorPagePattern = new URLPattern(errorPagePath);
+                                    if (mappingPattern.implies(errorPagePattern)) {
                                         fileExists = true;
+                                        break;
                                     }
                                 }
                             }
