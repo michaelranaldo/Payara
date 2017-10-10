@@ -357,25 +357,20 @@ final class StandardHostValve
                     File file2 = new File(errorPage.getLocation());
                     if (!file2.exists()) {
                         boolean fileExists = false;
-                        String errorPagePath = errorPage.getLocation();
-                        for (String servletMapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath()).findServletMappings()) {
-                            URLPattern mappingPattern = new URLPattern(servletMapping);
-                            URLPattern errorPagePattern = new URLPattern(errorPagePath);
-                            if (mappingPattern.implies(errorPagePattern)) {
+                        for (String servletMapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath())
+                                .findServletMappings()) {
+                            if (URLPattern.match(servletMapping, errorPage.getLocation())) {
                                 fileExists = true;
                                 break;
                             }
                         }
                         if (!fileExists) {
-                            for (FilterMap mapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath()).findFilterMaps()) {
-                                if (mapping.getDispatcherTypes().contains(DispatcherType.ERROR)) {
-                                    String filterMapPath = mapping.getURLPattern();
-                                    URLPattern mappingPattern = new URLPattern(filterMapPath);
-                                    URLPattern errorPagePattern = new URLPattern(errorPagePath);
-                                    if (mappingPattern.implies(errorPagePattern)) {
+                            for (FilterMap mapping : ((StandardHost) getContainer()).findDeployedApp(context.getPath())
+                                    .findFilterMaps()) {
+                                if (mapping.getDispatcherTypes().contains(DispatcherType.ERROR)
+                                        && URLPattern.match(mapping.getURLPattern(), errorPage.getLocation())) {
                                         fileExists = true;
                                         break;
-                                    }
                                 }
                             }
                             if (!fileExists) {
@@ -388,15 +383,12 @@ final class StandardHostValve
             }
             setErrorPageContentType(response, errorPage.getLocation(), context);
             dispatchToErrorPage(request, response, errorPage, null, null, statusCode);
-        } else if (statusCode >= 400 && statusCode < 600 &&
-                context.getDefaultErrorPage() != null) {
-            dispatchToErrorPage(request, response,
-                context.getDefaultErrorPage(), null, null, statusCode);
+        } else if (statusCode >= 400 && statusCode < 600 && context.getDefaultErrorPage() != null) {
+            dispatchToErrorPage(request, response, context.getDefaultErrorPage(), null, null, statusCode);
         }
         // START SJSAS 6324911
         else {
-            errorPage = ((StandardHost) getContainer()).findErrorPage(
-                                                        statusCode);
+            errorPage = ((StandardHost) getContainer()).findErrorPage(statusCode);
             if (errorPage != null) {
                 if (errorPage.getLocation() != null) {
                     File file = new File(context.getDocBase(), errorPage.getLocation());

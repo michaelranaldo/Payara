@@ -208,6 +208,18 @@ public class URLPattern extends Object implements Comparable {
         }
         return depth;
     }
+    
+    /**
+     * Minor utility method which instantiates a pattern before comparing it against another.
+     * @param originalPattern The pattern to compare against
+     * @param newPattern The pattern to compare
+     * @return 
+     */
+    public static boolean match(String originalPattern, String newPattern) {
+        URLPattern original = new URLPattern(originalPattern);
+        URLPattern comparee = new URLPattern(newPattern);
+        return original.implies(comparee);
+    }
 
     @Override
     public boolean equals(Object obj) {
