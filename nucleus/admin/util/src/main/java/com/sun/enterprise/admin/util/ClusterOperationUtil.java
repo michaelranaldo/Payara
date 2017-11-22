@@ -69,6 +69,10 @@ public class ClusterOperationUtil {
     
     private static final LocalStringManagerImpl strings = new LocalStringManagerImpl(ClusterOperationUtil.class);
     
+    private static final List<String> ALLOWED_COMMANDS = new ArrayList<String>() {{
+       add("_get-runtime-info");
+    }};
+
     //TODO : Begin temp fix for undoable commands
     private static List<Server> completedInstances = new ArrayList<Server>();
 
@@ -160,7 +164,9 @@ public class ClusterOperationUtil {
                     continue;
                 }               
                 Config scfg = svr.getConfig();
-                if (!Boolean.valueOf(scfg.getDynamicReconfigurationEnabled())) {
+                // PAYARA-2162 Restart Required is set erroneously when _get-runtime-info is called
+                if (!Boolean.valueOf(scfg.getDynamicReconfigurationEnabled()) 
+                        && !ALLOWED_COMMANDS.contains(commandName)) {
                     // Do not replicate to servers for which dynamic configuration is disabled
                     ActionReport aReport = context.getActionReport().addSubActionsReport();
                     aReport.setActionExitCode(ActionReport.ExitCode.WARNING);
