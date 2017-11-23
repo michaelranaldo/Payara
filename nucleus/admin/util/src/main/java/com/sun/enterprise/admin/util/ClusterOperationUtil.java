@@ -67,12 +67,8 @@ public class ClusterOperationUtil {
     private static final Logger logger = AdminLoggerInfo.getLogger();
     
     
-    private static final LocalStringManagerImpl strings =
-                        new LocalStringManagerImpl(ClusterOperationUtil.class);
+    private static final LocalStringManagerImpl strings = new LocalStringManagerImpl(ClusterOperationUtil.class);
     
-    // PAYARA-2162 Commands which poll remote instances without setting values can trigger restart-required
-    private static final List<String> ALLOWED_COMMANDS = Arrays.asList("_get-runtime-info");
-
     //TODO : Begin temp fix for undoable commands
     private static List<Server> completedInstances = new ArrayList<Server>();
 
@@ -164,9 +160,7 @@ public class ClusterOperationUtil {
                     continue;
                 }               
                 Config scfg = svr.getConfig();
-                // PAYARA-2162 Restart Required is set erroneously when _get-runtime-info is called
-                if (!Boolean.valueOf(scfg.getDynamicReconfigurationEnabled()) 
-                        && !ALLOWED_COMMANDS.contains(commandName)) {
+                if (!Boolean.valueOf(scfg.getDynamicReconfigurationEnabled())) {
                     // Do not replicate to servers for which dynamic configuration is disabled
                     ActionReport aReport = context.getActionReport().addSubActionsReport();
                     aReport.setActionExitCode(ActionReport.ExitCode.WARNING);
