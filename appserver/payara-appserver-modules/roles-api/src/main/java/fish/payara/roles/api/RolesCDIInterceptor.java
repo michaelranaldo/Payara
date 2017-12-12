@@ -46,7 +46,7 @@ import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 
 /**
- *
+ * Interceptor with the actual logic.
  * @author Michael Ranaldo <michael@ranaldo.co.uk>
  */
 @Interceptor
@@ -54,5 +54,8 @@ import javax.interceptor.Interceptor;
 @Priority(Interceptor.Priority.PLATFORM_AFTER)
 public class RolesCDIInterceptor implements Serializable {
     @AroundInvoke
-    public Object doStuff() {return null;} 
+    public Object doStuff() {
+        System.out.println("I'm doing something!");
+        return null;
+    } 
 }
