@@ -61,5 +61,5 @@ public @interface Roles {
      * Defaults to blank i.e. none.
      * @return 
      */
-    String allowedRoles() default "";
+    String[] allowedRoles() default "";
 }

@@ -53,7 +53,9 @@ import javax.enterprise.inject.spi.Extension;
  * @author Michael Ranaldo <michael@ranaldo.co.uk>
  */
 public class RolesCDIExtension implements Extension {
-        void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager beanManager) {
+
+    void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager beanManager) {
+        // OPT : CHECK PRESENCE 
         // Add interceptor binding to annotation:
         beforeBeanDiscovery.addInterceptorBinding(Roles.class);
         // Create and add annotated type:

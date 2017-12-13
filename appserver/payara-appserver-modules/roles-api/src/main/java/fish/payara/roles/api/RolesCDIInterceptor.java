@@ -44,6 +44,7 @@ import java.io.Serializable;
 import javax.annotation.Priority;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
+import javax.interceptor.InvocationContext;
 
 /**
  * Interceptor with the actual logic.
@@ -54,8 +55,13 @@ import javax.interceptor.Interceptor;
 @Priority(Interceptor.Priority.PLATFORM_AFTER)
 public class RolesCDIInterceptor implements Serializable {
     @AroundInvoke
-    public Object doStuff() {
+    public Object doStuff(InvocationContext ctx) {
         System.out.println("I'm doing something!");
+        if (true) {
+            // proceed
+        } else {
+            // denied
+        }
         return null;
     } 
 }
