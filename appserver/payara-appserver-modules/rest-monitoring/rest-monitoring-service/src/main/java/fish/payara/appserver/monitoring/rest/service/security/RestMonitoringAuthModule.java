@@ -107,8 +107,8 @@ public class RestMonitoringAuthModule implements ServerAuthModule {
             Principal userPrincipal = request.getUserPrincipal();
             if (userPrincipal != null) {
                 try {
-                    handler.handle(new Callback[] { new CallerPrincipalCallback(clientSubject, userPrincipal) });
-                    
+                    handler.handle(new Callback[]{new CallerPrincipalCallback(clientSubject, userPrincipal)});
+
                     return AuthStatus.SUCCESS;
                 } catch (IOException | UnsupportedCallbackException ex) {
                     AuthException ae = new AuthException();
