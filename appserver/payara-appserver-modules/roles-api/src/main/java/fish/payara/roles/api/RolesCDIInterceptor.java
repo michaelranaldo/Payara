@@ -57,6 +57,8 @@ public class RolesCDIInterceptor implements Serializable {
     @AroundInvoke
     public Object doStuff(InvocationContext ctx) {
         System.out.println("I'm doing something!");
+        // Send data to authmodule?
+        // gotta populate principals?
         if (true) {
             // proceed
         } else {

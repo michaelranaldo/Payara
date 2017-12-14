@@ -43,15 +43,12 @@ package fish.payara.roles.api.auth;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.message.AuthException;
 import javax.security.auth.message.AuthStatus;
-import static javax.security.auth.message.AuthStatus.SEND_FAILURE;
 import static javax.security.auth.message.AuthStatus.SEND_SUCCESS;
 import javax.security.auth.message.MessageInfo;
 import javax.security.auth.message.MessagePolicy;
@@ -62,8 +59,6 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.glassfish.hk2.api.ServiceLocator;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -75,7 +70,8 @@ public class RolesCDIAuthModule implements ServerAuthModule {
 
     private String loginPage = null;
     private String loginErrorPage = null;
-    private String ORIGINAL_REQUEST_PATH = "origRequestPath";
+    
+    private static final String ORIGINAL_REQUEST_PATH = "origRequestPath";
     private static final Class[] SUPPORTED_MESSAGE_TYPES
             = new Class[]{HttpServletRequest.class, HttpServletResponse.class};
 
@@ -97,15 +93,14 @@ public class RolesCDIAuthModule implements ServerAuthModule {
         if (options != null) {
             this.loginPage = (String) options.get("loginPage");
             if (loginPage == null) {
-                throw new AuthException("'loginPage' "
-                        + "must be supplied as a property in the provider-config "
-                        + "in the domain.xml file!");
+                throw new AuthException("'loginPage' must be supplied as a property in the provider-config in the "
+                        + "domain.xml file!");
             }
             this.loginErrorPage = (String) options.get("loginErrorPage");
             if (loginErrorPage == null) {
-                throw new AuthException("'loginErrorPage' "
-                        + "must be supplied as a property in the provider-config "
-                        + "in the domain.xml file!");
+                // FIXME with localstrings
+                throw new AuthException("'loginErrorPage' must be supplied as a property in the provider-config in the "
+                        + "domain.xml file!");
             }
             
         }
@@ -123,7 +118,8 @@ public class RolesCDIAuthModule implements ServerAuthModule {
 
     /**
      * Validate a given request, comparing the submitted principals to the allowed roles.
-     *
+     * Gets the Principal from the request if present, otherwise relies on j_username being passed in.
+     * 
      * @param messageInfo
      * @param clientSubject
      * @param serviceSubject
@@ -172,29 +168,35 @@ public class RolesCDIAuthModule implements ServerAuthModule {
                 throw authException;
             }
 
+            // Send them on to the login page
             return AuthStatus.SEND_CONTINUE;
         }
 
+        // Validate password
         PasswordValidationCallback pvCallback = new PasswordValidationCallback(clientSubject, username,
                 password.toCharArray());
         try {
+            // Manage auth via callback
             handler.handle(new Callback[]{pvCallback});
         } catch (IOException | UnsupportedCallbackException ex) {
             AuthException ae = new AuthException();
             ae.initCause(ex);
             throw ae;
         }
-        // Register the session as authenticated
+        
+        // Register the session as authenticated now it's passed auth
         messageInfo.getMap().put("javax.servlet.http.registerSession", Boolean.TRUE.toString());
 
         // Redirect to original path
         try {
             String origRequest = (String) request.getSession().getAttribute(ORIGINAL_REQUEST_PATH);
-
+            
+            // If no original path within session
             if (origRequest == null) {
-                origRequest = ;
+                // FIXME
+                throw new RuntimeException();
             }
-
+            // Finally, send them on their way
             response.sendRedirect(response.encodeRedirectURL(origRequest));
         } catch (IOException ex) {
             AuthException ae = new AuthException();
@@ -202,7 +204,7 @@ public class RolesCDIAuthModule implements ServerAuthModule {
             throw ae;
         }
 
-        // Continue...
+        // Continue
         return AuthStatus.SUCCESS;
     }
 
