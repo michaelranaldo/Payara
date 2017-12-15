@@ -43,13 +43,22 @@ holder.
     <parent>
         <groupId>fish.payara.nucleus.microprofile</groupId>
         <artifactId>nucleus-microprofile</artifactId>
-        <version>4.1.2.174-SNAPSHOT</version>
+        <version>4.1.2.181-SNAPSHOT</version>
     </parent>
     <groupId>fish.payara.nucleus.microprofile.config</groupId>
     <artifactId>microprofile-config-service</artifactId>
     <name>Microprofile Config Service</name>
     <description>Implementation of Microprofile Configuration Service</description>
     <packaging>glassfish-jar</packaging>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.15</version>
+            </plugin>
+        </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
@@ -102,5 +111,11 @@ holder.
             <version>4.1.1.171-SNAPSHOT</version>
             <type>jar</type>
         </dependency>-->
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>1.1</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>

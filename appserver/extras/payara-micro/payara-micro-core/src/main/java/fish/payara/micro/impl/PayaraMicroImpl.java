@@ -89,6 +89,7 @@ import fish.payara.micro.data.InstanceDescriptor;
 import fish.payara.nucleus.requesttracing.RequestTracingService;
 import java.io.FileNotFoundException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -167,6 +168,7 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
     private String postBootFileName;
     private String postDeployFileName;
     private RuntimeDirectory runtimeDir = null;
+    private String secretsDir;
 
     /**
      * Runs a Payara Micro server used via java -jar payara-micro.jar
@@ -981,7 +983,9 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
             configureAccessLogging();
             configureHazelcast();
             configurePhoneHome();
+            configureNotificationService();
             configureHealthCheck();
+            configureSecrets();
 
             // Add additional libraries
             addLibraries();
@@ -1298,6 +1302,9 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
                     case postdeploycommandfile:
                         postDeployFileName = value;
                         break;
+                    case secretsdir:
+                        secretsDir = value;
+                        break;
                     default:
                         break;
                 }
@@ -1365,13 +1372,13 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
         int deploymentCount = 0;
         Deployer deployer = gf.getDeployer();
 
-        // search MICRO-INF/deploy for deployments
+        // search and deploy from MICRO-INF/deploy directory.
         // if there is a deployment called ROOT deploy to the root context /
         URL url = this.getClass().getClassLoader().getResource("MICRO-INF/deploy");
         if (url != null) {
             String entryName = "";
             try {
-                List<String> entriesToDeploy = new LinkedList<>();
+                List<String> microInfEntries = new LinkedList<>();
                 JarURLConnection urlcon = (JarURLConnection) url.openConnection();
                 JarFile jFile = urlcon.getJarFile();
                 Enumeration<JarEntry> entries = jFile.entries();
@@ -1379,11 +1386,11 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
                     JarEntry entry = entries.nextElement();
                     entryName = entry.getName();
                     if (!entry.isDirectory() && !entryName.endsWith(".properties") && !entryName.endsWith(".xml") && !entryName.endsWith(".gitkeep") && entryName.startsWith("MICRO-INF/deploy")) {
-                        entriesToDeploy.add(entryName);
+                        microInfEntries.add(entryName);
                     }
                 }
 
-                for (String entry : entriesToDeploy) {
+                for (String entry : microInfEntries) {
                     File file = new File(entry);
                     String contextRoot = file.getName();
                     String name = contextRoot.substring(0, contextRoot.length() - 4);
@@ -1408,6 +1415,7 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
             LOGGER.info("No META-INF/deploy directory");
         }
 
+        // Deploy command line provided files
         if (deployments != null) {
             for (File war : deployments) {
                 if (war.exists() && war.canRead()) {
@@ -1425,13 +1433,18 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
 
         // Deploy from deployment directory
         if (deploymentRoot != null) {
-            for (File war : deploymentRoot.listFiles()) {
-                String warPath = war.getAbsolutePath();
-                if (war.isFile() && war.canRead() && (warPath.endsWith(".war") || warPath.endsWith(".ear") || warPath.endsWith(".jar") || warPath.endsWith(".rar"))) {
-                    if (war.getName().startsWith("ROOT.")) {
-                        deployer.deploy(war, "--availabilityenabled=true", "--force=true", "--contextroot=/");
+            
+            // Get all files in the directory, and sort them by file type
+            List<File> deploymentDirEntries = Arrays.asList(deploymentRoot.listFiles());
+            deploymentDirEntries.sort(new DeploymentComparator());
+            
+            for (File entry : deploymentDirEntries) {
+                String entryPath = entry.getAbsolutePath();
+                if (entry.isFile() && entry.canRead() && (entryPath.endsWith(".war") || entryPath.endsWith(".ear") || entryPath.endsWith(".jar") || entryPath.endsWith(".rar"))) {
+                    if (entry.getName().startsWith("ROOT.")) {
+                        deployer.deploy(entry, "--availabilityenabled=true", "--force=true", "--contextroot=/");
                     } else {
-                        deployer.deploy(war, "--availabilityenabled=true", "--force=true");
+                        deployer.deploy(entry, "--availabilityenabled=true", "--force=true");
                     }
                     deploymentCount++;
                 }
@@ -1971,6 +1984,7 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
         enableRequestTracing = getBooleanProperty("payaramicro.enableRequestTracing");
         requestTracingThresholdUnit = getProperty("payaramicro.requestTracingThresholdUnit", "SECONDS");
         requestTracingThresholdValue = getLongProperty("payaramicro.requestTracingThresholdValue", 30L);
+        secretsDir = getProperty("payaramicro.secretsDir");
 
         // Set the rootDir file
         String rootDirFileStr = getProperty("payaramicro.rootDir");
@@ -2093,6 +2107,10 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
 
         if (hzClusterPassword != null) {
             props.setProperty("payaramicro.clusterPassword", hzClusterPassword);
+        }
+        
+        if (secretsDir != null) {
+            props.setProperty("payaramicro.secretsDir", secretsDir);
         }
 
         props.setProperty("payaramicro.autoBindHttp", Boolean.toString(autoBindHttp));
@@ -2274,6 +2292,12 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
             LOGGER.log(Level.WARNING, "Could not load the boot system properties from " + BOOT_PROPS_FILE, ioe);
         }
     }
+    
+    private void configureNotificationService() {
+        if (enableHealthCheck || enableRequestTracing) {
+            preBootCommands.add(new BootCommand("set", "configs.config.server-config.notification-service-configuration.enabled=true"));
+        }
+    }
 
     private void configureHealthCheck() {
         if (enableHealthCheck) {
@@ -2388,6 +2412,12 @@ public class PayaraMicroImpl implements PayaraMicroBoot {
             }
         } else {
             LOGGER.log(Level.SEVERE, "Unable to read jar " + lib.getName());
+        }
+    }
+
+    private void configureSecrets() {
+        if (secretsDir != null) {
+            preBootCommands.add(new BootCommand("set", "configs.config.server-config.microprofile-config.secret-dir=" + secretsDir));            
         }
     }
 
